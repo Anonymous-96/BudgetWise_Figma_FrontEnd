@@ -181,12 +181,12 @@ export default function LandingPage({ isDarkMode, toggleDarkMode }: LandingPageP
               
               <Link to="/dashboard">
                 <Button variant="outline" size="sm">
-                  Sign In
+                  Demo
                 </Button>
               </Link>
-              <Link to="/dashboard">
+              <Link to="/auth">
                 <Button size="sm">
-                  Get Started
+                  Sign In
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -221,15 +221,17 @@ export default function LandingPage({ isDarkMode, toggleDarkMode }: LandingPageP
             </div>
             
             <div className="slide-up mb-12 flex flex-col gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '200ms' }}>
-              <Link to="/dashboard">
+              <Link to="/auth">
                 <Button size="lg" className="w-full sm:w-auto">
-                  Start Free Trial
+                  Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Schedule Demo
-              </Button>
+              <Link to="/dashboard">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  Try Demo
+                </Button>
+              </Link>
             </div>
             
             {/* Stats */}
@@ -355,15 +357,17 @@ export default function LandingPage({ isDarkMode, toggleDarkMode }: LandingPageP
               Join thousands of users who have already simplified their financial management.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link to="/dashboard">
+              <Link to="/auth">
                 <Button size="lg" className="w-full sm:w-auto">
-                  Start Free Trial
+                  Get Started Free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Contact Sales
-              </Button>
+              <Link to="/dashboard">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                  Try Demo
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

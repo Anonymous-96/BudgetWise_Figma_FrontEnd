@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { getAccounts, getTransactions } from '../lib/supabase';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -40,8 +42,36 @@ export default function DashboardLayout({
   notifications = []
 }: DashboardLayoutProps) {
   const location = useLocation();
+  const { user, profile } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [accountSummary, setAccountSummary] = useState({
+    totalBalance: 0,
+    accountCount: 0
+  });
+
+  React.useEffect(() => {
+    if (user) {
+      loadAccountSummary();
+    }
+  }, [user]);
+
+  const loadAccountSummary = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: accounts } = await getAccounts(user.id);
+      if (accounts) {
+        const totalBalance = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
+        setAccountSummary({
+          totalBalance,
+          accountCount: accounts.length
+        });
+      }
+    } catch (error) {
+      console.error('Error loading account summary:', error);
+    }
+  };
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -126,7 +156,9 @@ export default function DashboardLayout({
               </Avatar>
               {!isSidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">Alex Johnson</p>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {profile?.full_name || 'User'}
+                  </p>
                   <div className="flex items-center space-x-1">
                     <Badge className="badge-success text-xs">Premium</Badge>
                     <span className="text-xs text-muted-foreground">•</span>
@@ -205,7 +237,7 @@ export default function DashboardLayout({
               {/* Performance Badge */}
               <Badge className="badge-success hidden sm:inline-flex">
                 <TrendingUp className="mr-1 h-3 w-3" />
-                +12.5% this month
+                ₹{accountSummary.totalBalance.toLocaleString()}
               </Badge>
 
               {/* Theme Toggle */}
@@ -264,8 +296,13 @@ export default function DashboardLayout({
                   className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all duration-200" 
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
-                  <AvatarImage src="/api/placeholder/32/32" alt="Profile" />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">AJ</AvatarFallback>
+                  <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || 'User'} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                    {profile?.full_name ? 
+                      profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : 
+                      'U'
+                    }
+                  </AvatarFallback>
                 </Avatar>
                 
                 {/* User Menu Dropdown */}
