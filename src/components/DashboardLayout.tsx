@@ -70,6 +70,11 @@ export default function DashboardLayout({
       }
     } catch (error) {
       console.error('Error loading account summary:', error);
+      // Set default values on error
+      setAccountSummary({
+        totalBalance: 0,
+        accountCount: 0
+      });
     }
   };
 

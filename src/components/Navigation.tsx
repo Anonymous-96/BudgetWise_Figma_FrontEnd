@@ -87,18 +87,23 @@ export default function Navigation({ isDarkMode, toggleDarkMode }: NavigationPro
 
     try {
       const { data: accounts } = await getAccounts(user.id);
-      const { data: transactions } = await getTransactions(user.id, 10);
 
       if (accounts) {
         const totalBalance = accounts.reduce((sum, account) => sum + Number(account.balance), 0);
         setAccountSummary({
           totalBalance,
           accountCount: accounts.length,
-          recentTransactions: transactions?.length || 0
+          recentTransactions: 0
         });
       }
     } catch (error) {
       console.error('Error loading account summary:', error);
+      // Set default values on error
+      setAccountSummary({
+        totalBalance: 0,
+        accountCount: 0,
+        recentTransactions: 0
+      });
     }
   };
 

@@ -10,12 +10,16 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const { data: profileData } = await getProfile(session.user.id);
-        setProfile(profileData);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const { data: profileData } = await getProfile(session.user.id);
+          setProfile(profileData);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
       }
       
       setLoading(false);
@@ -26,13 +30,22 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const { data: profileData } = await getProfile(session.user.id);
-          setProfile(profileData);
-        } else {
-          setProfile(null);
+        try {
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            // Wait a bit for the profile to be created by the trigger
+            if (event === 'SIGNED_UP') {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            const { data: profileData } = await getProfile(session.user.id);
+            setProfile(profileData);
+          } else {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error);
         }
         
         setLoading(false);
