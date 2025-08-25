@@ -14,16 +14,7 @@ export default function AuthWrapper({ children, requireAuth = true }: AuthWrappe
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="clean-card p-8">
-          <CardContent className="flex flex-col items-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Loading your financial dashboard...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return null; // Remove loading screen for better UX
   }
 
   if (requireAuth && !isAuthenticated) {

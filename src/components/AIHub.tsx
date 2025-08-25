@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
+import ChatBot from './ui/ChatBot';
 import { Progress } from './ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Slider } from './ui/slider';
@@ -30,6 +31,8 @@ import {
   Pause
 } from 'lucide-react';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { useAuth } from '../hooks/useAuth';
+import { getTransactions, getGoals, getAccounts } from '../lib/supabase';
 
 interface AIHubProps {
   isDarkMode: boolean;
@@ -39,15 +42,51 @@ interface AIHubProps {
 
 export default function AIHub({ isDarkMode, toggleDarkMode, isOffline }: AIHubProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useAuth();
+  const [userContext, setUserContext] = useState<any>({});
   const [activeSimulation, setActiveSimulation] = useState('savings');
   const [simulationValue, setSimulationValue] = useState([5000]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
 
   useEffect(() => {
     setIsLoaded(true);
+    if (user) {
+      loadUserContext();
+    }
   }, []);
+
+  const loadUserContext = async () => {
+    if (!user) return;
+
+    try {
+      const [accountsResult, transactionsResult, goalsResult] = await Promise.all([
+        getAccounts(user.id),
+        getTransactions(user.id, 50),
+        getGoals(user.id)
+      ]);
+
+      const accounts = accountsResult.data || [];
+      const transactions = transactionsResult.data || [];
+      const goals = goalsResult.data || [];
+
+      const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+      const monthlyIncome = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + Number(t.amount), 0);
+      const monthlyExpenses = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+
+      setUserContext({
+        totalBalance,
+        monthlyIncome,
+        monthlyExpenses,
+        goals,
+        recentTransactions: transactions.slice(0, 10)
+      });
+    } catch (error) {
+      console.error('Error loading user context:', error);
+    }
+  };
 
   // Enhanced predictive data
   const predictiveData = [
@@ -126,29 +165,6 @@ export default function AIHub({ isDarkMode, toggleDarkMode, isOffline }: AIHubPr
     { name: 'Entertainment', transactions: 12, confidence: 92, amount: 6000, trend: 'up' },
     { name: 'Utilities', transactions: 6, confidence: 98, amount: 15000, trend: 'stable' }
   ];
-
-  const handleVoiceInput = () => {
-    setIsListening(!isListening);
-    // Simulate voice recognition
-    if (!isListening) {
-      setTimeout(() => {
-        setChatMessage("How can I optimize my savings this month?");
-        setIsListening(false);
-      }, 3000);
-    }
-  };
-
-  const handleSendMessage = () => {
-    if (chatMessage.trim()) {
-      setIsTyping(true);
-      setChatMessage('');
-      
-      // Simulate AI response
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
-    }
-  };
 
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 90) return 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20';
@@ -407,95 +423,9 @@ export default function AIHub({ isDarkMode, toggleDarkMode, isOffline }: AIHubPr
           </Card>
 
           {/* Enhanced AI Chat Advisor */}
-          <Card className={`clean-card slide-up ${isLoaded ? 'animate' : ''}`} style={{ animationDelay: '500ms' }}>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
-                  <Bot className="h-6 w-6 text-white" />
-                </div>
-                <span>AI Financial Advisor</span>
-                {isTyping && (
-                  <Badge className="badge-success animate-pulse">
-                    Typing...
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Sample AI Message */}
-                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="flex items-start space-x-3">
-                    <Bot className="h-5 w-5 text-primary mt-1" />
-                    <div>
-                      <p className="text-sm text-foreground">
-                        Based on your spending patterns, I recommend reducing dining expenses by 20% this month. 
-                        This could save you ₹3,700 while maintaining your lifestyle.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Typing Indicator */}
-                {isTyping && (
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <div className="flex items-center space-x-2">
-                      <Bot className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Chat Input */}
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Ask me anything about your finances..."
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="flex-1 input-clean"
-                  />
-                  <Button
-                    variant={isListening ? "destructive" : "outline"}
-                    size="icon"
-                    onClick={handleVoiceInput}
-                    className="relative"
-                  >
-                    <Mic className={`h-4 w-4 ${isListening ? 'animate-pulse' : ''}`} />
-                    {isListening && (
-                      <div className="absolute inset-0 rounded-md bg-red-500/20 animate-ping"></div>
-                    )}
-                  </Button>
-                  <Button onClick={handleSendMessage}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Quick Suggestions */}
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "Optimize my budget",
-                    "Investment advice",
-                    "Reduce expenses"
-                  ].map((suggestion, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => setChatMessage(suggestion)}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className={`slide-up ${isLoaded ? 'animate' : ''}`} style={{ animationDelay: '500ms' }}>
+            <ChatBot userContext={userContext} />
+          </div>
         </div>
       </div>
     </DashboardLayout>
