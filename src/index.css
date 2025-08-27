@@ -6,48 +6,48 @@
 
 :root {
   /* Light Mode Colors */
-  --primary: #2563EB;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F8FAFC;
-  --secondary-foreground: #334155;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
-  --accent: #F1F5F9;
-  --accent-foreground: #334155;
-  --destructive: #DC2626;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #FFFFFF;
-  --ring: #2563EB;
-  --background: #FFFFFF;
-  --foreground: #0F172A;
-  --card: #FFFFFF;
-  --card-foreground: #0F172A;
-  --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --primary: 37 99 235;
+  --primary-foreground: 255 255 255;
+  --secondary: 248 250 252;
+  --secondary-foreground: 51 65 85;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
+  --accent: 241 245 249;
+  --accent-foreground: 51 65 85;
+  --destructive: 220 38 38;
+  --destructive-foreground: 255 255 255;
+  --border: 226 232 240;
+  --input: 255 255 255;
+  --ring: 37 99 235;
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --popover: 255 255 255;
+  --popover-foreground: 15 23 42;
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-  --card: #1E293B;
-  --card-foreground: #F8FAFC;
-  --popover: #1E293B;
-  --popover-foreground: #F8FAFC;
-  --primary: #3B82F6;
-  --primary-foreground: #FFFFFF;
-  --secondary: #1E293B;
-  --secondary-foreground: #CBD5E1;
-  --muted: #334155;
-  --muted-foreground: #94A3B8;
-  --accent: #334155;
-  --accent-foreground: #CBD5E1;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #334155;
-  --input: #1E293B;
-  --ring: #3B82F6;
+  --background: 15 23 42;
+  --foreground: 248 250 252;
+  --card: 30 41 59;
+  --card-foreground: 248 250 252;
+  --popover: 30 41 59;
+  --popover-foreground: 248 250 252;
+  --primary: 59 130 246;
+  --primary-foreground: 255 255 255;
+  --secondary: 30 41 59;
+  --secondary-foreground: 203 213 225;
+  --muted: 51 65 85;
+  --muted-foreground: 148 163 184;
+  --accent: 51 65 85;
+  --accent-foreground: 203 213 225;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 51 65 85;
+  --input: 30 41 59;
+  --ring: 59 130 246;
 }
 
 * {
@@ -239,4 +239,43 @@ body {
   .section-padding {
     padding: 4rem 0;
   }
+}
+
+/* Zen styles for Goals and Budgets */
+.zen-card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius));
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.zen-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
+.zen-button {
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.zen-ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.zen-ripple:active::before {
+  width: 300px;
+  height: 300px;
 }
