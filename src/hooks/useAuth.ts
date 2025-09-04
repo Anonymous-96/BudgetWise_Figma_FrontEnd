@@ -1,51 +1,21 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-
-interface Profile {
-  id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { supabase, Profile, getProfile } from '../lib/supabase';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const getProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        return { data: null, error };
-      }
-      
-      return { data, error: null };
-    } catch (err) {
-      console.error('Unexpected error fetching profile:', err);
-      return { data: null, error: { message: 'Failed to fetch profile' } };
-    }
-  };
-
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
+        setUser(session?.user ?? null);
         
-        if (currentUser) {
-          const { data: profileData } = await getProfile(currentUser.id);
+        if (session?.user) {
+          const { data: profileData } = await getProfile(session.user.id);
           setProfile(profileData);
         }
       } catch (error) {
@@ -61,16 +31,15 @@ export function useAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
-          const currentUser = session?.user ?? null;
-          setUser(currentUser);
+          setUser(session?.user ?? null);
           
-          if (currentUser) {
+          if (session?.user) {
             // Wait a bit for the profile to be created by the trigger
             if (event === 'SIGNED_UP') {
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
             
-            const { data: profileData } = await getProfile(currentUser.id);
+            const { data: profileData } = await getProfile(session.user.id);
             setProfile(profileData);
           } else {
             setProfile(null);
