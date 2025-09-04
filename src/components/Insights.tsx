@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from './DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import ChatBot from './ui/ChatBot';
+import { ScrollArea } from './ui/scroll-area';
 import { 
   Bot, 
   Send, 
@@ -17,11 +17,8 @@ import {
   Calendar,
   DollarSign,
   User,
-  Sparkles,
-  Loader2
+  Sparkles
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
-import { getTransactions, getGoals, getAccounts } from '../lib/supabase';
 
 interface InsightsProps {
   isDarkMode: boolean;
@@ -29,51 +26,27 @@ interface InsightsProps {
 }
 
 export default function Insights({ isDarkMode, toggleDarkMode }: InsightsProps) {
-  const { user } = useAuth();
-  const [userContext, setUserContext] = useState<any>({});
-  const [isLoadingContext, setIsLoadingContext] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      loadUserContext();
+  const [message, setMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      type: 'ai',
+      content: "Hello! I'm your AI Financial Advisor. I've analyzed your spending patterns and have some insights to share. How can I help you today?",
+      timestamp: new Date(Date.now() - 60000)
+    },
+    {
+      id: 2,
+      type: 'user',
+      content: "Can you help me understand my spending trends this month?",
+      timestamp: new Date(Date.now() - 30000)
+    },
+    {
+      id: 3,
+      type: 'ai',
+      content: "Based on your transaction data, I notice you've spent 23% more on dining out compared to last month. Your food expenses have increased from ₹15,000 to ₹18,500. Would you like some suggestions to optimize this category?",
+      timestamp: new Date(Date.now() - 15000)
     }
-  }, [user]);
-
-  const loadUserContext = async () => {
-    if (!user) return;
-
-    try {
-      const [accountsResult, transactionsResult, goalsResult] = await Promise.all([
-        getAccounts(user.id),
-        getTransactions(user.id, 30),
-        getGoals(user.id)
-      ]);
-
-      const accounts = accountsResult.data || [];
-      const transactions = transactionsResult.data || [];
-      const goals = goalsResult.data || [];
-
-      const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
-      const monthlyIncome = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-      const monthlyExpenses = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
-
-      setUserContext({
-        totalBalance,
-        monthlyIncome,
-        monthlyExpenses,
-        goals,
-        recentTransactions: transactions.slice(0, 10)
-      });
-    } catch (error) {
-      console.error('Error loading user context:', error);
-    } finally {
-      setIsLoadingContext(false);
-    }
-  };
+  ]);
 
   // Mock insights data
   const aiInsights = [
@@ -149,6 +122,35 @@ export default function Insights({ isDarkMode, toggleDarkMode }: InsightsProps) 
     "When can I afford my vacation goal?"
   ];
 
+  const handleSendMessage = () => {
+    if (message.trim()) {
+      const newMessage = {
+        id: chatMessages.length + 1,
+        type: 'user' as const,
+        content: message,
+        timestamp: new Date()
+      };
+      
+      setChatMessages([...chatMessages, newMessage]);
+      setMessage('');
+      
+      // Simulate AI response
+      setTimeout(() => {
+        const aiResponse = {
+          id: chatMessages.length + 2,
+          type: 'ai' as const,
+          content: "That's a great question! Let me analyze your data and provide you with personalized recommendations based on your spending patterns and financial goals.",
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+      }, 1000);
+    }
+  };
+
+  const handleQuickQuestion = (question: string) => {
+    setMessage(question);
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -180,16 +182,77 @@ export default function Insights({ isDarkMode, toggleDarkMode }: InsightsProps) 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* AI Chat Interface */}
           <div className="lg:col-span-2 space-y-6">
-            {isLoadingContext ? (
-              <Card className="clean-card h-[600px] flex items-center justify-center">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-                  <p className="text-muted-foreground">Loading your financial context...</p>
+            <Card className="clean-card h-[600px] flex flex-col">
+              <CardHeader className="border-b border-border">
+                <CardTitle className="flex items-center space-x-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Bot className="h-5 w-5 text-primary" />
+                  </div>
+                  <span>AI Financial Advisor</span>
+                  <Badge className="badge-success">
+                    Online
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {chatMessages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-lg p-3 ${
+                        msg.type === 'user' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-foreground'
+                      }`}>
+                        <div className="flex items-center space-x-2 mb-1">
+                          {msg.type === 'ai' ? (
+                            <Bot className="h-4 w-4" />
+                          ) : (
+                            <User className="h-4 w-4" />
+                          )}
+                          <span className="text-xs opacity-70">
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </Card>
-            ) : (
-              <ChatBot userContext={userContext} />
-            )}
+              </ScrollArea>
+              
+              <div className="border-t border-border p-4">
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Ask me anything about your finances..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  />
+                  <Button onClick={handleSendMessage}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Quick Questions */}
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground mb-2">Quick questions:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {quickQuestions.slice(0, 3).map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleQuickQuestion(question)}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
 
           {/* Insights Panel */}
