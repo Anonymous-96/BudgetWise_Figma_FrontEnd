@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://kzzatfvzethoepgpekiw.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6emF0ZnZ6ZXRob2VwZ3Bla2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTU5MTksImV4cCI6MjA3MTUzMTkxOX0.vdVRRBZMUN5WKzQ-dRNtjM2BBwyzsPTSJSYqaVNeQJ0';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
@@ -91,46 +91,24 @@ export interface Goal {
 
 // Auth helpers
 export const signUp = async (email: string, password: string, fullName?: string) => {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
       },
-    });
-    
-    if (error) {
-      console.error('Signup error:', error);
-      return { data: null, error };
-    }
-    
-    return { data, error: null };
-  } catch (err) {
-    console.error('Unexpected signup error:', err);
-    return { data: null, error: { message: 'An unexpected error occurred during signup' } };
-  }
+    },
+  });
+  return { data, error };
 };
 
 export const signIn = async (email: string, password: string) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      console.error('Signin error:', error);
-      return { data: null, error };
-    }
-    
-    return { data, error: null };
-  } catch (err) {
-    console.error('Unexpected signin error:', err);
-    return { data: null, error: { message: 'An unexpected error occurred during signin' } };
-  }
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  return { data, error };
 };
 
 export const signOut = async () => {
@@ -145,23 +123,12 @@ export const getCurrentUser = async () => {
 
 // Database helpers
 export const getProfile = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-    
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching profile:', error);
-      return { data: null, error };
-    }
-    
-    return { data, error: null };
-  } catch (err) {
-    console.error('Unexpected error fetching profile:', err);
-    return { data: null, error: { message: 'Failed to fetch profile' } };
-  }
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  return { data, error };
 };
 
 export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
@@ -175,24 +142,13 @@ export const updateProfile = async (userId: string, updates: Partial<Profile>) =
 };
 
 export const getAccounts = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching accounts:', error);
-      return { data: [], error };
-    }
-    
-    return { data: data || [], error: null };
-  } catch (err) {
-    console.error('Unexpected error fetching accounts:', err);
-    return { data: [], error: { message: 'Failed to fetch accounts' } };
-  }
+  const { data, error } = await supabase
+    .from('accounts')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+  return { data, error };
 };
 
 export const createAccount = async (account: Omit<Account, 'id' | 'created_at' | 'updated_at'>) => {

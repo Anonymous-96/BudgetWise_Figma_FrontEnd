@@ -38,28 +38,22 @@ export default function AuthForm() {
           return;
         }
 
-        const { data, error } = await signUp(formData.email, formData.password, formData.fullName);
+        const { error } = await signUp(formData.email, formData.password, formData.fullName);
         if (error) {
-          setError(error.message || 'Failed to create account');
+          setError(error.message);
         } else {
-          // Show success message for email confirmation if needed
-          if (data?.user && !data?.session) {
-            setError('Please check your email to confirm your account');
-          } else {
-            navigate('/dashboard');
-          }
+          navigate('/dashboard');
         }
       } else {
-        const { data, error } = await signIn(formData.email, formData.password);
+        const { error } = await signIn(formData.email, formData.password);
         if (error) {
-          setError(error.message || 'Failed to sign in');
+          setError(error.message);
         } else {
           navigate('/dashboard');
         }
       }
     } catch (err) {
-      console.error('Auth error:', err);
-      setError('An unexpected error occurred. Please try again.');
+      setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
